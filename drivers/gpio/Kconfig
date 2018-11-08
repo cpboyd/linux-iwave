@@ -293,6 +293,12 @@ config GPIO_MXC
 	select GPIO_GENERIC
 	select GENERIC_IRQ_CHIP
 
+config RAINBOW_UNUSED_GPIO
+       tristate "iWave unused GPIO"
+       depends on OF_GPIO && IWG15 && GPIO_MXC
+       help
+         Say yes here to set the unused GPIOs as input in iW-RainboW-G15 platform.
+
 config GPIO_MXS
 	def_bool y
 	depends on ARCH_MXS

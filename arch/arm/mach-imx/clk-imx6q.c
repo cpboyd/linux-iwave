@@ -804,6 +804,17 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
 	imx_clk_set_parent(clk[IMX6QDL_CLK_IPU1_DI1_SEL], clk[IMX6QDL_CLK_IPU1_DI1_PRE]);
 	imx_clk_set_parent(clk[IMX6QDL_CLK_IPU2_DI0_SEL], clk[IMX6QDL_CLK_IPU2_DI0_PRE]);
 	imx_clk_set_parent(clk[IMX6QDL_CLK_IPU2_DI1_SEL], clk[IMX6QDL_CLK_IPU2_DI1_PRE]);
+#ifdef CONFIG_IWG15
+	/* IWG15: IPU: Added the below lines to fix for Frame buffer conflict with RGB LCD(fb0) & HDMI(fb2) */
+	imx_clk_set_rate(clk[IMX6QDL_CLK_PLL3_PFD1_540M], 540000000);
+	imx_clk_set_parent(clk[IMX6QDL_CLK_IPU1_SEL], clk[IMX6QDL_CLK_PLL3_PFD1_540M]);
+	imx_clk_set_parent(clk[IMX6QDL_CLK_AXI_ALT_SEL], clk[IMX6QDL_CLK_PLL3_PFD1_540M]);
+	imx_clk_set_parent(clk[IMX6QDL_CLK_AXI_SEL], clk[IMX6QDL_CLK_AXI_ALT_SEL]);
+	/* set epdc/pxp axi clock to 200Mhz */
+	imx_clk_set_parent(clk[IMX6QDL_CLK_IPU2_SEL], clk[IMX6QDL_CLK_PLL2_PFD2_396M]);
+	imx_clk_set_rate(clk[IMX6QDL_CLK_IPU2], 200000000);
+
+#else
 	if (cpu_is_imx6dl()) {
 		imx_clk_set_rate(clk[IMX6QDL_CLK_PLL3_PFD1_540M], 540000000);
 		imx_clk_set_parent(clk[IMX6QDL_CLK_IPU1_SEL], clk[IMX6QDL_CLK_PLL3_PFD1_540M]);
@@ -818,6 +829,7 @@ static void __init imx6q_clocks_init(struct device_node *ccm_node)
 		/* set eim_slow to 132Mhz */
 		imx_clk_set_rate(clk[IMX6QDL_CLK_EIM_SLOW], 132000000);
 	}
+#endif
 
 	/*
 	 * The gpmi needs 100MHz frequency in the EDO/Sync mode,

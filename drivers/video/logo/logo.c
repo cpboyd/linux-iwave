@@ -43,7 +43,10 @@ late_initcall(fb_logo_late_init);
 const struct linux_logo * __init_refok fb_find_logo(int depth)
 {
 	const struct linux_logo *logo = NULL;
-
+#ifdef CONFIG_IWG15
+	/* IWG15: LOGO: Adding IWave Logo */
+	int cpu_num = num_online_cpus();
+#endif
 	if (nologo || logos_freed)
 		return NULL;
 
@@ -77,6 +80,20 @@ const struct linux_logo * __init_refok fb_find_logo(int depth)
 #ifdef CONFIG_LOGO_LINUX_CLUT224
 		/* Generic Linux logo */
 		logo = &logo_linux_clut224;
+#endif
+#ifdef CONFIG_LOGO_IWAVE_SM_CLUT224
+		if (cpu_num == 1)
+			/* iWave Solo logo */
+			logo = &logo_iwave_sm_solo_clut224;
+		else if (cpu_num == 2)
+			/* iWave Dual logo */
+			logo = &logo_iwave_sm_dual_clut224;
+		else if (cpu_num == 3)
+			/* iWave Triple logo */
+			logo = &logo_iwave_sm_triple_clut224;
+		else if (cpu_num == 4)
+			/* iWave Quad logo */
+			logo = &logo_iwave_sm_quad_clut224;
 #endif
 #ifdef CONFIG_LOGO_BLACKFIN_CLUT224
 		/* Blackfin Linux logo */

@@ -104,13 +104,19 @@ static int pwm_backlight_update_status(struct backlight_device *bl)
 	if (pb->notify)
 		brightness = pb->notify(pb->dev, brightness);
 
+#ifdef CONFIG_IWG15M_SM
+	/*IWG15M-SM: PWM: Added to fix the LCD brightness control which was working reversely*/
+	duty_cycle = compute_duty_cycle(pb, brightness);
+	pwm_config(pb->pwm, duty_cycle, pb->period);
+	pwm_backlight_power_on(pb, brightness);
+#else
 	if (brightness > 0) {
 		duty_cycle = compute_duty_cycle(pb, brightness);
 		pwm_config(pb->pwm, duty_cycle, pb->period);
 		pwm_backlight_power_on(pb, brightness);
 	} else
 		pwm_backlight_power_off(pb);
-
+#endif
 	if (pb->notify_after)
 		pb->notify_after(pb->dev, brightness);
 

@@ -139,7 +139,12 @@ static int bgpio_get(struct gpio_chip *gc, unsigned int gpio)
 {
 	struct bgpio_chip *bgc = to_bgpio_chip(gc);
 
+#ifdef CONFIG_IWG15
+	/* Parse the correct GPIO value */
+	return (bgc->read_reg(bgc->reg_dat) >> gpio) & 0x1;
+#else
 	return !!(bgc->read_reg(bgc->reg_dat) & bgc->pin2mask(bgc, gpio));
+#endif
 }
 
 static void bgpio_set(struct gpio_chip *gc, unsigned int gpio, int val)

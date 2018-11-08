@@ -437,6 +437,11 @@ dtb-$(CONFIG_SOC_VF610) += \
 	imx6sx-sabreauto-m4.dtb \
 	vf610-cosmic.dtb \
 	vf610-twr.dtb
+dtb-$(CONFIG_IWG15M_SM) += \
+	imx6qd-iwg15m-sm_ldoactive.dtb \
+	imx6dls-iwg15m-sm_ldoactive.dtb \
+	imx6qd-iwg15m-sm_ldobypass.dtb \
+	imx6dls-iwg15m-sm_ldobypass.dtb 
 dtb-$(CONFIG_ARCH_MXS) += \
 	imx23-evk.dtb \
 	imx23-olinuxino.dtb \

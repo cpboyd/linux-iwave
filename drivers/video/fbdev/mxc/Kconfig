@@ -96,3 +96,9 @@ config FB_MXC_EINK_V2_PANEL
 config FB_MXC_EINK_AUTO_UPDATE_MODE
 	bool "E-Ink Auto-update Mode Support"
 	depends on FB_MXC_EINK_PANEL
+
+config IWG15_BACKLIGHT
+       tristate "iWave RainboW G15 backlight control"
+       depends on IWG15 && MXC_IPU_V3
+       help
+         Say yes here to control the LVDS backlight and power control in iW-RainboW-G15 platform.

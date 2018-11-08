@@ -34,6 +34,10 @@
 
 static void __iomem *wdog_base;
 static struct clk *wdog_clk;
+static u32 wdog_source = 1; /* use WDOG1 default */
+#ifdef CONFIG_IWG15
+extern void pfuze_core_val (void);
+#endif
 
 /*
  * Reset the system. It is called by machine_restart().
@@ -41,6 +45,27 @@ static struct clk *wdog_clk;
 void mxc_restart(enum reboot_mode mode, const char *cmd)
 {
 	unsigned int wcr_enable;
+
+#ifdef CONFIG_IWG15
+	/* Increase the PMIC's SW1AB (VDDARM) voltage to 1.15 
+	   Otherwise system may not get to reboot in LDO bypass mode 
+	 */
+       if (of_machine_is_compatible("iw,qd_iwg15m_sm") || of_machine_is_compatible("iw,dls_iwg15m_sm"))
+	{
+		struct device_node *np;
+		u32 ldo_bypass;
+
+		np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-gpc");
+		if (!np) {
+			pr_warn("failed to find fsl,imx6q-gpc node\n");
+			of_node_put(np);
+		}
+		of_property_read_u32(np, "fsl,ldo-bypass", &ldo_bypass);
+
+		if (ldo_bypass)
+			pfuze_core_val ();
+	}
+#endif
 
 	if (!wdog_base)
 		goto reset_fallback;
@@ -89,6 +114,42 @@ void __init mxc_arch_reset_init(void __iomem *base)
 		clk_prepare(wdog_clk);
 }
 
+#ifdef CONFIG_IWG15
+void __init mxc_arch_reset_init_dt(void)
+{
+	struct device_node *np = NULL;
+
+	if (cpu_is_imx6q() || cpu_is_imx6dl())
+		np = of_find_compatible_node(NULL, NULL, "fsl,imx6q-gpc");
+	else if (cpu_is_imx6sl())
+		np = of_find_compatible_node(NULL, NULL, "fsl,imx6sl-gpc");
+
+	if (np)
+		of_property_read_u32(np, "fsl,wdog-reset", &wdog_source);
+	pr_info("Use WDOG%d as reset source\n", wdog_source);
+
+	np = of_find_compatible_node(NULL, NULL, "fsl,imx21-wdt");
+	wdog_base = of_iomap(np, 0);
+	WARN_ON(!wdog_base);
+
+	/* Some i.MX6 boards use WDOG2 to reset board in ldo-bypass mode */
+	if (wdog_source == 2 && (cpu_is_imx6q() || cpu_is_imx6dl() ||
+		cpu_is_imx6sl())) {
+		np = of_find_compatible_node(np, NULL, "fsl,imx21-wdt");
+		wdog_base = of_iomap(np, 0);
+		WARN_ON(!wdog_base);
+	}
+
+	wdog_clk = of_clk_get(np, 0);
+	if (IS_ERR(wdog_clk)) {
+		pr_warn("%s: failed to get wdog clock\n", __func__);
+		wdog_clk = NULL;
+		return;
+	}
+
+	clk_prepare(wdog_clk);
+}
+#endif
 #ifdef CONFIG_CACHE_L2X0
 void __init imx_init_l2cache(void)
 {

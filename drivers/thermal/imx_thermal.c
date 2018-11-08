@@ -106,6 +106,9 @@ enum imx_thermal_trip {
 #define TEMPMON_IMX6Q			1
 #define TEMPMON_IMX6SX			2
 #define TEMPMON_IMX7			3
+#ifdef CONFIG_IWG15
+#define OCOTP_MEM0                      0x0480
+#endif
 
 /* the register offsets and bitfields may change across
  * i.MX SOCs, use below struct as a description of the
@@ -232,6 +235,9 @@ struct imx_thermal_data {
 	struct clk *thermal_clk;
 	struct mutex mutex;
 	const struct thermal_soc_data *socdata;
+#ifdef CONFIG_IWG15
+        const char *temp_grade;
+#endif
 };
 
 static struct imx_thermal_data *imx_thermal_data;
@@ -620,7 +626,41 @@ static int imx_get_sensor_data(struct platform_device *pdev)
 		imx7_calibrate_data(data, val);
 	else
 		imx6_calibrate_data(data, val);
+#ifdef CONFIG_IWG15
+	/*Added to set the critical and passive tmperature based on temperature grading value*/
+	/* use OTP for thermal grade */
+	ret = regmap_read(map, OCOTP_MEM0, &val);
+	if (ret) {
+		dev_err(&pdev->dev, "failed to read temp grade: %d\n", ret);
+		return ret;
+	}
 
+	/* The maximum die temp is specified by the Temperature Grade */
+	switch (val >> 6) {
+		case 0: /* Commercial (0 to 95C) */
+			data->temp_grade = "Commercial";
+			data->temp_passive = 75000;
+			break;
+		case 1: /* Extended Commercial (-20 to 105C) */
+			data->temp_grade = "Extended Commercial";
+			data->temp_passive = 85000;
+			break;
+		case 2: /* Industrial (-40 to 105C) */
+			data->temp_grade = "Industrial";
+			data->temp_passive = 85000;
+			break;
+		case 3: /* Automotive (-40 to 125C) */
+			data->temp_grade = "Automotive";
+			data->temp_passive = 100000;
+			break;
+	}
+
+ 	/*
+	 * Set the default critical trip point to 20 C higher
+	 * than passive trip point. Can be changed from userspace.
+	 */
+	data->temp_critical = data->temp_passive + 10 * 1000;
+#else
 	/*
 	 * Set the default passive cooling trip point to IMX_TEMP_PASSIVE.
 	 * Can be changed from userspace.
@@ -628,11 +668,12 @@ static int imx_get_sensor_data(struct platform_device *pdev)
 	data->temp_passive = IMX_TEMP_PASSIVE;
 
 	/*
-	 * Set the default critical trip point to 20 C higher
+	 * Set the default critical trip point to 10 C higher
 	 * than passive trip point. Can be changed from userspace.
 	 */
 	data->temp_critical = IMX_TEMP_PASSIVE + 20 * 1000;
 
+#endif
 	return 0;
 }
 

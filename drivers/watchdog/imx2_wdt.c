@@ -67,6 +67,11 @@
 #define WDOG_SEC_TO_COUNT(s)	((s * 2 - 1) << 8)
 #define WDOG_SEC_TO_PRECOUNT(s)	(s * 2)		/* set WDOG pre timeout count*/
 
+#ifdef CONFIG_IWG15
+/* IWG15S: WDOG: Fixed for watchdog Application reset issue in PICO */
+extern void pfuze_core_val (void);
+#endif
+
 struct imx2_wdt_device {
 	struct clk *clk;
 	struct regmap *regmap;
@@ -197,6 +202,13 @@ static int imx2_wdt_start(struct watchdog_device *wdog)
 		imx2_wdt_set_timeout(wdog, wdog->timeout);
 	} else
 		imx2_wdt_setup(wdog);
+
+#ifdef CONFIG_IWG15
+	/* IWG15S: WDOG: Fixed for watchdog Application reset issue */
+	if (of_machine_is_compatible("iw,qd_iwg15m_sm") ||
+			of_machine_is_compatible("iw,dls_iwg15m_sm"))
+		pfuze_core_val();
+#endif
 
 	return imx2_wdt_ping(wdog);
 }

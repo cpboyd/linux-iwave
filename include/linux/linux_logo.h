@@ -32,6 +32,14 @@ struct linux_logo {
 	const unsigned char *data;
 };
 
+#ifdef CONFIG_IWG15
+/* IWG15: Logo: Logo Structure variables */
+extern const struct linux_logo logo_iwave_sm_solo_clut224;
+extern const struct linux_logo logo_iwave_sm_dual_clut224;
+extern const struct linux_logo logo_iwave_sm_triple_clut224;
+extern const struct linux_logo logo_iwave_sm_quad_clut224;
+#endif
+
 extern const struct linux_logo logo_linux_mono;
 extern const struct linux_logo logo_linux_vga16;
 extern const struct linux_logo logo_linux_clut224;

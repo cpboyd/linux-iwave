@@ -1955,6 +1955,6 @@ static inline u8 ata_wait_idle(struct ata_port *ap)
 
 	return status;
 }
-#endif /* CONFIG_ATA_SFF */
+#endif /* CONFIG_ATA_SFF */ 
 
 #endif /* __LINUX_LIBATA_H__ */

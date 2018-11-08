@@ -1,0 +1,506 @@
+/*
+ * Copyright (c) 2017 iWave Systems Technologies Pvt. Ltd.
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 or later at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+
+/ {
+        aliases {
+                mxcfb0 = &mxcfb1;
+                mxcfb1 = &mxcfb2;
+                mxcfb2 = &mxcfb3;
+        };
+
+        memory: memory {
+                reg = <0x10000000 0x40000000>;
+        };
+
+        regulators {
+                compatible = "simple-bus";
+
+                reg_2p5v: 2p5v {
+                        compatible = "regulator-fixed";
+                        regulator-name = "2P5V";
+                        regulator-min-microvolt = <2500000>;
+                        regulator-max-microvolt = <2500000>;
+                        regulator-always-on;
+                };
+
+                reg_3p3v: 3p3v {
+                        compatible = "regulator-fixed";
+                        regulator-name = "3P3V";
+                        regulator-min-microvolt = <3300000>;
+                        regulator-max-microvolt = <3300000>;
+                        regulator-always-on;
+                };
+
+                reg_0p0v: 0p0v {
+                        compatible = "regulator-fixed";
+                        regulator-name = "0P0V";
+                        regulator-min-microvolt = <0000000>;
+                        regulator-max-microvolt = <0000000>;
+                        regulator-always-on;
+                };
+
+        };
+
+        sound-hdmi {
+                compatible = "fsl,imx6q-audio-hdmi",
+                             "fsl,imx-audio-hdmi";
+                model = "imx-audio-hdmi";
+                hdmi-controller = <&hdmi_audio>;
+        };
+
+	sound {
+                compatible = "fsl,imx6q","fsl,imx-audio-sgtl5000";
+                model = "imx6-audio-sgtl5000";
+		ssi-controller = <&ssi2>;
+                audio-codec = <&codec>;
+                audio-routing =
+                        "MIC_IN", "Mic Jack",
+                        "Mic Jack", "Mic Bias",
+                        "Headphone Jack", "HP_OUT";
+                mux-int-port = <2>;
+                mux-ext-port = <4>;
+        };
+
+        mxcfb1: fb@0 {
+                compatible = "fsl,mxc_sdc_fb";
+                disp_dev = "lcd";
+                interface_pix_fmt = "RGB24";
+                mode_str ="WQVGA";
+                default_bpp = <24>;
+                int_clk = <0>;
+                late_init = <0>;
+                status = "disabled";
+        };
+
+	mxcfb2: fb@1 {
+		compatible = "fsl,mxc_sdc_fb";
+		disp_dev = "hdmi";
+		interface_pix_fmt = "RGB24";
+		mode_str ="1920x1080M@60";
+		default_bpp = <24>;
+		int_clk = <0>;
+		late_init = <0>;
+		status = "disabled";
+	};
+		
+	mxcfb3: fb@2 {
+		compatible = "fsl,mxc_sdc_fb";
+		disp_dev = "ldb";
+		interface_pix_fmt = "RGB666";
+		default_bpp = <16>;
+		int_clk = <0>;
+		late_init = <0>;
+		status = "disabled";
+	};
+
+	lcd@0 {
+		compatible = "fsl,lcd";
+		ipu_id = <0>;
+		disp_id = <0>;
+		default_ifmt = "RGB565";
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_ipu1_2>;
+		status = "okay";
+	};
+
+	backlight {
+                compatible = "pwm-backlight";
+                pwms = <&pwm3 0 5000000>;
+                brightness-levels = <0 4 8 16 32 64 128 255>;
+                default-brightness-level = <7>;
+		status = "okay";
+        };
+
+	backlight@1 {
+		compatible = "pwm-backlight";
+		pwms = <&pwm1 0 5000000>;
+		brightness-levels = <255 128 64 32 16 8 4 0>;
+		default-brightness-level = <7>;
+		status = "okay";
+        };
+
+v4l2_cap_0 {
+                compatible = "fsl,imx6q-v4l2-capture";
+                ipu_id = <0>;
+                csi_id = <0>;
+                mclk_source = <0>;
+                status = "disabled";
+        };
+
+v4l2_cap_1: v4l2_cap_1 {
+                compatible = "fsl,imx6q-v4l2-capture";
+                csi_id = <1>;
+                mclk_source = <0>;
+                status = "disabled";
+        };
+
+v4l2_out {
+                compatible = "fsl,mxc_v4l2_output";
+                status = "okay";
+        };
+
+
+unused_gpios: unused_gpios {
+                compatible = "iwave,unused-gpios";
+                status = "okay";
+        };
+
+iwg15_sm_common {
+                compatible = "iwave,g15-sm-com";
+                bom-rev-gpios = <&gpio1 5 0 &gpio5 22 0 &gpio5 23 0 &gpio5 24 0 &gpio5 25 0>;
+                som-rev-gpios = <&gpio7 0 0  &gpio7 1 0 >;
+
+                reset-gpios = <&gpio1 11 1>;
+                status = "okay";
+        };
+
+        iwg15_sm_lcd_pwr {
+                compatible = "iwave,g15-sm_lcd_pwr";
+                lcd-power = <&gpio4 13 1>;
+                lcd-reset = <&gpio7 11 1>;
+        };
+};
+
+&fec {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_enet_1>;
+        phy-mode = "rgmii";
+		fsl,magic-packet;
+        status = "okay";
+};
+
+&gpc {
+        fsl,ldo-bypass = <1>; /* use ldo-bypass, u-boot will check it and configure */
+        fsl,wdog-reset = <1>; /* watchdog select of reset source */
+};
+
+&wdog1 {
+	status = "okay";
+};
+
+&wdog2 {
+	status = "disabled";
+};
+
+&hdmi_audio {
+        status = "okay";
+};
+
+&hdmi_cec {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_hdmi_cec_4>;
+        hdmi-cec-sm = <&gpio1 21 1>;
+        status = "okay";
+};
+
+&hdmi_core {
+        ipu_id = <0>;
+        disp_id = <1>;
+        status = "okay";
+};
+
+&hdmi_video {
+        fsl,phy_reg_vlev = <0x0294>;
+        fsl,phy_reg_cksymtx = <0x800d>;
+        status = "okay";
+};
+
+&mxcfb1 {
+        status = "okay";
+};
+
+&mxcfb2 {
+        status = "okay";
+};
+
+&dcic1 {
+	dcic_id = <0>;
+	dcic_mux = "dcic-hdmi";
+	status = "okay";
+};
+
+&dcic2 {
+	dcic_id = <1>;
+	dcic_mux = "dcic-lvds0";
+	status = "okay";
+};
+
+&uart1 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_uart1_1>;
+        status = "okay";
+};
+
+&uart2 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_uart2_1>;
+        status = "okay";
+};
+
+&uart4 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_uart4_4>;
+        status = "okay";
+};
+
+&uart5 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_uart5_4>;
+        fsl,uart-has-rtscts;
+        status = "okay";
+};
+
+&usdhc3 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_usdhc3_4>;
+        cd-gpios = <&gpio3 25 1>;
+        no-1-8-v;
+        keep-power-in-suspend;
+        enable-sdio-wakeup;
+        status = "okay";
+};
+
+&usdhc4 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_usdhc4_1>;
+        bus-width = <8>;
+        non-removable;
+        no-1-8-v;
+        keep-power-in-suspend;
+        status = "okay";
+};
+
+&ecspi1 {
+        fsl,spi-num-chipselects = <1>;
+        cs-gpios = <&gpio2 30 0>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_ecspi1_1 &pinctrl_ecspi1_cs_1>;
+        status = "okay";
+
+        flash: m25p80@0 {
+                #address-cells = <1>;
+                #size-cells = <1>;
+                compatible = "st,m25p32";
+                spi-max-frequency = <20000000>;
+                reg = <0>;
+        };
+};
+
+&usbh1 {
+	status = "okay";
+};
+
+&usbotg {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_usbotg_4>;
+        disable-over-current;
+	srp-disable;
+	hnp-disable;
+	adp-disable;
+        status = "okay";
+};
+
+&pcie {
+        status = "okay";
+};
+
+&pwm1 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_pwm1_2>;
+        status = "okay";
+};
+
+&pwm2 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_pwm2_4>;
+        status = "okay";
+};
+&pwm3 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_pwm3_4>;
+        status = "okay";
+};
+&pwm4 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_pwm4_4>;
+        status = "okay";
+};
+
+&i2c1 {
+        clock-frequency = <400000>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_i2c1_1>;
+        status = "okay";
+
+};
+
+&i2c3 {
+        clock-frequency = <400000>;
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_i2c3_4>;
+        status = "okay";
+
+        hdmi: edid@50 {
+                compatible = "fsl,imx6-hdmi-i2c";
+                reg = <0x50>;
+        };
+
+		/* STMPE811 touch screen controller */
+        stmpe811@44 {
+                compatible = "st,stmpe811";
+                #address-cells = <1>;
+                #size-cells = <0>;
+                reg = <0x44>;
+                interrupts = <0 2>;
+                interrupt-parent = <&gpio2>;
+                interrupt-controller;
+                id = <0>;
+                blocks = <0x5>;
+                irq-trigger = <0x1>;
+
+                stmpe_touchscreen {
+                	compatible = "st,stmpe-ts";
+                        reg = <0>;
+                        /* 3.25 MHz ADC clock speed */
+                        st,adc-freq = <3>;
+                        /* 8 sample average control */
+                        st,ave-ctrl = <2>;
+                        /* 7 length fractional part in z */
+                        st,fraction-z = <7>;
+                        /*
+                         * 50 mA typical 80 mA max touchscreen drivers
+                         * current limit value
+                         */
+                        st,i-drive = <0>;
+                        /* 12-bit ADC */
+                        st,mod-12b = <1>;
+                        /* internal ADC reference */
+                        st,ref-sel = <0>;
+                        /* ADC converstion time: 80 clocks */
+                        st,sample-time = <4>;
+                        /* 1 ms panel driver settling time */
+                        st,settling = <3>;
+                        /* 5 ms touch detect interrupt delay */
+                        st,touch-det-delay = <4>;
+		};
+ 	};
+
+	codec: sgtl5000@0a {
+	       compatible = "fsl,sgtl5000";
+	       reg = <0x0a>;
+	       clocks = <&clks 201>;
+	       VDDA-supply = <&reg_3p3v>;
+	       VDDIO-supply = <&reg_3p3v>;
+	       VDDD-supply = <&reg_0p0v>;
+       };
+};
+
+&audmux {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_audmux_4>;
+        status = "okay";
+};
+
+&ssi2 {
+        fsl,mode = "i2s-slave";
+        status = "okay";
+};
+
+&flexcan1 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_flexcan1_4>;
+        trx-en-gpio = <&gpio6 10 1>;
+        status = "okay";
+};
+&flexcan2 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_flexcan2_2>;
+        status = "okay";
+};
+
+&i2c1 {
+	pmic: pfuze100@08 {
+		compatible = "fsl,pfuze100";
+		reg = <0x08>;
+
+		regulators {
+			sw1a_reg: sw1ab {
+				regulator-min-microvolt = <300000>;
+				regulator-max-microvolt = <1875000>;
+				regulator-boot-on;
+				regulator-always-on;
+				regulator-ramp-delay = <6250>;
+			};
+
+			sw1c_reg: sw1c {
+				regulator-min-microvolt = <300000>;
+				regulator-max-microvolt = <1875000>;
+				regulator-boot-on;
+				regulator-always-on;
+				regulator-ramp-delay = <6250>;
+			};
+
+			sw2_reg: sw2 {
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			sw3a_reg: sw3a {
+				regulator-min-microvolt = <400000>;
+				regulator-max-microvolt = <1975000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			sw3b_reg: sw3b {
+				regulator-min-microvolt = <400000>;
+				regulator-max-microvolt = <1975000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			sw4_reg: sw4 {
+				regulator-min-microvolt = <800000>;
+				regulator-max-microvolt = <3300000>;
+			};
+
+			snvs_reg: vsnvs {
+				regulator-min-microvolt = <1000000>;
+				regulator-max-microvolt = <3000000>;
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vref_reg: vrefddr {
+				regulator-boot-on;
+				regulator-always-on;
+			};
+
+			vgen4_reg: vgen4 {
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+
+			vgen5_reg: vgen5 {
+				regulator-min-microvolt = <1800000>;
+				regulator-max-microvolt = <3300000>;
+				regulator-always-on;
+			};
+
+		};
+	};
+};

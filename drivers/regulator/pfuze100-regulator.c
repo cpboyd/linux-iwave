@@ -129,7 +129,14 @@ static int pfuze100_set_ramp_delay(struct regulator_dev *rdev, int ramp_delay)
 	unsigned int ramp_bits;
 	int ret;
 
+#ifdef CONFIG_IWG15
+	/* The ramp delay is supported by only SW regulators and here 
+	 * SWBST not used so regulator id 6 will be assigned to VSNVS 
+	 */
+	if (id < PFUZE100_VSNVS) {
+#else
 	if (id < PFUZE100_SWBST) {
+#endif
 		ramp_delay = 12500 / ramp_delay;
 		ramp_bits = (ramp_delay >> 1) - (ramp_delay >> 3);
 		ret = regmap_update_bits(pfuze100->regmap,
@@ -310,15 +317,23 @@ static struct pfuze_regulator pfuze100_regulators[] = {
 	PFUZE100_SW_REG(PFUZE100, SW3A, PFUZE100_SW3AVOL, 400000, 1975000, 25000),
 	PFUZE100_SW_REG(PFUZE100, SW3B, PFUZE100_SW3BVOL, 400000, 1975000, 25000),
 	PFUZE100_SW_REG(PFUZE100, SW4, PFUZE100_SW4VOL, 400000, 1975000, 25000),
+#ifndef CONFIG_IWG15
 	PFUZE100_SWB_REG(PFUZE100, SWBST, PFUZE100_SWBSTCON1, 0x3 , pfuze100_swbst),
+#endif
 	PFUZE100_SWB_REG(PFUZE100, VSNVS, PFUZE100_VSNVSVOL, 0x7, pfuze100_vsnvs),
 	PFUZE100_FIXED_REG(PFUZE100, VREFDDR, PFUZE100_VREFDDRCON, 750000),
+#ifndef CONFIG_IWG15
 	PFUZE100_VGEN_REG(PFUZE100, VGEN1, PFUZE100_VGEN1VOL, 800000, 1550000, 50000),
+#endif
+#if !(defined(CONFIG_IWG15M_Q7) || defined(CONFIG_IWG15M_SM))
 	PFUZE100_VGEN_REG(PFUZE100, VGEN2, PFUZE100_VGEN2VOL, 800000, 1550000, 50000),
 	PFUZE100_VGEN_REG(PFUZE100, VGEN3, PFUZE100_VGEN3VOL, 1800000, 3300000, 100000),
+#endif
 	PFUZE100_VGEN_REG(PFUZE100, VGEN4, PFUZE100_VGEN4VOL, 1800000, 3300000, 100000),
 	PFUZE100_VGEN_REG(PFUZE100, VGEN5, PFUZE100_VGEN5VOL, 1800000, 3300000, 100000),
+#ifndef CONFIG_IWG15
 	PFUZE100_VGEN_REG(PFUZE100, VGEN6, PFUZE100_VGEN6VOL, 1800000, 3300000, 100000),
+#endif
 };
 
 static struct pfuze_regulator pfuze200_regulators[] = {
@@ -364,15 +379,23 @@ static struct of_regulator_match pfuze100_matches[] = {
 	{ .name = "sw3a",	},
 	{ .name = "sw3b",	},
 	{ .name = "sw4",	},
+#ifndef CONFIG_IWG15
 	{ .name = "swbst",	},
+#endif
 	{ .name = "vsnvs",	},
 	{ .name = "vrefddr",	},
+#ifndef CONFIG_IWG15
 	{ .name = "vgen1",	},
+#endif
+#if !(defined(CONFIG_IWG15M_Q7) || defined (CONFIG_IWG15M_SM))
 	{ .name = "vgen2",	},
 	{ .name = "vgen3",	},
+#endif
 	{ .name = "vgen4",	},
 	{ .name = "vgen5",	},
+#ifndef CONFIG_IWG15
 	{ .name = "vgen6",	},
+#endif
 };
 
 /* PFUZE200 */
@@ -485,6 +508,84 @@ static inline struct device_node *match_of_node(int index)
 }
 #endif
 
+#ifdef CONFIG_IWG15
+static struct i2c_client *pfuze_client;
+void pfuze_core_val (void);
+
+static int pfuze_read_reg(struct i2c_client *client,
+		u8 reg, u8 len, void *val)
+{
+	struct i2c_msg xfer[2];
+	u8 buf[1];
+	int ret;
+
+	buf[0] = reg & 0xff;
+
+	/* Write register */
+	xfer[0].addr = client->addr;
+	xfer[0].flags = 0;
+	xfer[0].len = 1;
+	xfer[0].buf = buf;
+
+	/* Read data */
+	xfer[1].addr = client->addr;
+	xfer[1].flags = I2C_M_RD;
+	xfer[1].len = len;
+	xfer[1].buf = val;
+
+	ret = i2c_transfer(client->adapter, xfer, 2);
+	if (ret == 2) {
+		ret = 0;
+	} else {
+		if (ret >= 0)
+			ret = -EIO;
+		dev_err(&client->dev, "%s: i2c transfer failed (%d)\n",
+				__func__, ret);
+	}
+
+	return ret;
+}
+
+static int pfuze_write_reg(struct i2c_client *client, u8 reg, u8 len,
+		const void *val)
+{
+	u8 *buf;
+	size_t count;
+	int ret;
+
+	count = len + 1;
+	buf = kmalloc(count, GFP_KERNEL);
+	if (!buf)
+		return -ENOMEM;
+
+	buf[0] = reg & 0xff;
+	memcpy(&buf[1], val, len);
+
+	ret = i2c_master_send(client, buf, count);
+	if (ret == count) {
+		ret = 0;
+	} else {
+		if (ret >= 0)
+			ret = -EIO;
+		dev_err(&client->dev, "%s: i2c send failed (%d)\n",
+				__func__, ret);
+	}
+
+	kfree(buf);
+	return ret;
+}
+
+void pfuze_core_val (void)
+{
+	u8 val;
+	/* Read the PMIC's SW1AB (VDDARM) value and increase to 1.15V */
+	pfuze_read_reg (pfuze_client, PFUZE100_SW1ABVOL, 1, &val);
+	val  = (val & 0xC0) | 0x22;
+	pfuze_write_reg (pfuze_client, PFUZE100_SW1ABVOL, 1, &val);
+
+}
+#endif
+
 static int pfuze_identify(struct pfuze_chip *pfuze_chip)
 {
 	unsigned int value;
@@ -573,6 +674,10 @@ static int pfuze100_regulator_probe(struct i2c_client *client,
 		return ret;
 	}
 
+#ifdef CONFIG_IWG15
+	/* save the client address for increasing SW1AB voltage */
+	pfuze_client = client;
+#endif
 	ret = pfuze_identify(pfuze_chip);
 	if (ret) {
 		dev_err(&client->dev, "unrecognized pfuze chip ID!\n");

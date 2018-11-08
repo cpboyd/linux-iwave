@@ -24,6 +24,21 @@
 #define PFUZE100_SW3A		3
 #define PFUZE100_SW3B		4
 #define PFUZE100_SW4		5
+#if defined( CONFIG_IWG15M_Q7) || defined( CONFIG_IWG15M_SM)
+#define PFUZE100_VSNVS		6
+#define PFUZE100_VREFDDR	7
+#define PFUZE100_VGEN4		8
+#define PFUZE100_VGEN5		9
+#define PFUZE100_MAX_REGULATOR	10
+#elif defined (CONFIG_IWG15S_PICO)
+#define PFUZE100_VSNVS          6
+#define PFUZE100_VREFDDR        7
+#define PFUZE100_VGEN2          8
+#define PFUZE100_VGEN3          9
+#define PFUZE100_VGEN4          10
+#define PFUZE100_VGEN5          11
+#define PFUZE100_MAX_REGULATOR 	12
+#else
 #define PFUZE100_SWBST		6
 #define PFUZE100_VSNVS		7
 #define PFUZE100_VREFDDR	8
@@ -34,6 +49,7 @@
 #define PFUZE100_VGEN5		13
 #define PFUZE100_VGEN6		14
 #define PFUZE100_MAX_REGULATOR	15
+#endif
 
 #define PFUZE200_SW1AB		0
 #define PFUZE200_SW2		1

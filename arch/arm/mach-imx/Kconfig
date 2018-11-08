@@ -694,6 +694,57 @@ config SOC_LS1021A
 
 endif
 
+menuconfig IWG15
+        bool "iWave RainboW G15 Platforms support"
+        depends on ARCH_MXC
+        select SOC_IMX6Q
+        select ARCH_HAS_CPUFREQ
+        select ARCH_HAS_OPP
+        select ARM_CPU_SUSPEND if PM
+        select ARM_ERRATA_754322
+        select ARM_ERRATA_764369 if SMP
+        select ARM_ERRATA_775420
+        select ARM_ERRATA_794072 if SMP
+        select ARM_ERRATA_761320 if SMP
+        select ARM_GIC
+        select COMMON_CLK
+        select CPU_V7
+        select HAVE_ARM_SCU if SMP
+        select HAVE_ARM_TWD if LOCAL_TIMERS
+        select HAVE_CAN_FLEXCAN if CAN
+        select HAVE_IMX_ANATOP
+        select HAVE_IMX_GPC
+        select HAVE_IMX_MMDC
+        select HAVE_IMX_SRC
+        select HAVE_SMP
+        select MFD_SYSCON
+        select MIGHT_HAVE_PCI
+        select PCI_DOMAINS if PCI
+        select ARCH_SUPPORTS_MSI
+        select PINCTRL
+        select PINCTRL_IMX6Q
+        select PL310_ERRATA_769419 if CACHE_PL310
+        select PM_OPP if PM
+        select ZONE_DMA
+        select SND_SOC_IMX_PCM_FIQ
+        select SND_SOC_IMX_PCM_DMA
+        select SND_SOC_IMX_AUDMUX
+        help
+          This enables support for iWave RainboW G15 Platforms based Freescale i.MX6 Quad/Dual/Dualite/Solo processor.
+
+choice
+        prompt "iWave RainboW G15 Platforms Selection"
+        depends on IWG15
+
+config IWG15M_SM
+        bool "iWave RainboW G15 SODIMM Platforms support"
+        depends on IWG15
+        help
+          This enables support for iWave RainboW G15 SODIMM Platforms based Freescale i.MX6 Quad/Dual/Dualite/Solo processor.
+
+endchoice
+
+
 source "arch/arm/mach-imx/devices/Kconfig"
 
 endif

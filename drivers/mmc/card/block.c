@@ -46,6 +46,12 @@
 
 #include "queue.h"
 
+#ifdef CONFIG_IWG15
+/* IWG15: SD/MMC: Fix for static slot numbering */
+#include "../../../drivers/mmc/host/sdhci.h"
+#include "../../../arch/arm/mach-imx/hardware.h"
+#endif
+
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
 #undef MODULE_PARAM_PREFIX
@@ -2102,6 +2108,11 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 {
 	struct mmc_blk_data *md;
 	int devidx, ret;
+#ifdef CONFIG_IWG15
+        /* IWG15: SD/MMC: Fix for static slot numbering */
+        struct sdhci_host *host;
+        host = mmc_priv(card->host);
+#endif
 
 	devidx = find_first_zero_bit(dev_use, max_devices);
 	if (devidx >= max_devices)
@@ -2121,6 +2132,13 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 	 * index anymore so we keep track of a name index.
 	 */
 	if (!subname) {
+#ifdef CONFIG_IWG15M_SM
+		/* IWG15: SD/MMC: Fix for static slot numbering Micro SD - 0, eMMC - 1*/
+			if (host->irq == 294)
+				md->name_idx = 0;
+			else if (host->irq == 295)
+				md->name_idx = 1;
+#else
 		int idx;
 
 		idx = mmc_get_reserved_index(card->host);
@@ -2130,6 +2148,7 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
 			md->name_idx = find_next_zero_bit(name_use, max_devices,
 					mmc_first_nonreserved_index());
 
+#endif
 		__set_bit(md->name_idx, name_use);
 	} else
 		md->name_idx = ((struct mmc_blk_data *)

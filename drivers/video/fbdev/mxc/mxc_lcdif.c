@@ -36,6 +36,15 @@ struct mxc_lcdif_data {
 #define DISPDRV_LCD	"lcd"
 
 static struct fb_videomode lcdif_modedb[] = {
+#ifdef CONFIG_IWG15
+        /* IWG15M-SM: LCD: Parameters for the WQVGA LCD used */
+        {
+        /* 480x272 @ 57 Hz , pixel clk @ 27MHz */
+        "WQVGA", 60, 480, 272, 30030, 2, 2, 1, 2, 41, 10,
+        FB_SYNC_CLK_LAT_FALL,
+        FB_VMODE_NONINTERLACED,
+        0,},
+#endif
 	{
 	/* 800x480 @ 57 Hz , pixel clk @ 27MHz */
 	"CLAA-WVGA", 57, 800, 480, 37037, 40, 60, 10, 10, 20, 10,

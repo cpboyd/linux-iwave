@@ -38,6 +38,10 @@
 #define MX3_PWMCR_DOZEEN		(1 << 24)
 #define MX3_PWMCR_WAITEN		(1 << 23)
 #define MX3_PWMCR_DBGEN			(1 << 22)
+#ifdef CONFIG_IWG15M_SM
+/*IWG15M-SM: PWM: Added to fix the LCD brightness control which was working reversely*/
+#define MX3_PWMCR_POUTC_SET_COMP  (1 << 18)
+#endif
 #define MX3_PWMCR_CLKSRC_IPG_HIGH	(2 << 16)
 #define MX3_PWMCR_CLKSRC_IPG		(1 << 16)
 #define MX3_PWMCR_SWR			(1 << 3)
@@ -172,10 +176,16 @@ static int imx_pwm_config_v2(struct pwm_chip *chip,
 	writel(duty_cycles, imx->mmio_base + MX3_PWMSAR);
 	writel(period_cycles, imx->mmio_base + MX3_PWMPR);
 
+#ifdef CONFIG_IWG15M_SM
+	/*IWG15M-SM: PWM: Added to fix the LCD brightness control which was working reversely*/
+	cr = MX3_PWMCR_PRESCALER(prescale) |
+		MX3_PWMCR_DOZEEN | MX3_PWMCR_WAITEN |
+		MX3_PWMCR_DBGEN | MX3_PWMCR_CLKSRC_IPG_HIGH | MX3_PWMCR_POUTC_SET_COMP;
+#else
 	cr = MX3_PWMCR_PRESCALER(prescale) |
 		MX3_PWMCR_DOZEEN | MX3_PWMCR_WAITEN |
 		MX3_PWMCR_DBGEN | MX3_PWMCR_CLKSRC_IPG_HIGH;
-
+#endif
 	if (enable)
 		cr |= MX3_PWMCR_EN;
 

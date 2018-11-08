@@ -1,0 +1,91 @@
+/*
+ * Copyright (c) 2017 iWave Systems Technologies Pvt. Ltd.
+ *
+ * The code contained herein is licensed under the GNU General Public
+ * License. You may obtain a copy of the GNU General Public License
+ * Version 2 or later at the following locations:
+ *
+ * http://www.opensource.org/licenses/gpl-license.html
+ * http://www.gnu.org/copyleft/gpl.html
+ */
+
+/dts-v1/;
+
+#include "imx6q_iwg15.dtsi"
+#include "imx6qdl-iwg15m-sm.dtsi"
+
+/ {
+	model = "iWave RainboW-G15M-SM Board with PMIC based on Freescale i.MX6 Quad/Dual";
+	compatible = "iw,qd_iwg15m_sm", "fsl,imx6q";
+};
+
+&mxcfb3 {
+	status = "okay";
+};
+
+&sata {
+	status = "okay";
+};
+
+&iomuxc {
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_hog_sm_1>;
+};
+
+&v4l2_cap_1 {
+        ipu_id = <1>;
+};
+
+&ldb {
+        status = "okay";
+
+        lvds-channel@0 {
+                fsl,data-mapping = "spwg";
+                fsl,data-width = <18>;
+                primary;
+                crtc = "ipu2-di0";
+                status = "okay";
+
+                display-timings {
+                        native-mode = <&timing0>;
+                        timing0: ldb-svga {
+                                clock-frequency = <40000000>;
+                                hactive = <800>;
+                                vactive = <600>;
+                                hback-porch = <8>;
+                                hfront-porch = <8>;
+                                vback-porch = <6>;
+                                vfront-porch = <6>;
+                                hsync-len = <8>;
+                                vsync-len = <6>;
+                        };
+                };
+        };
+};
+
+&unused_gpios {
+	gpios = <
+		&gpio1 2  0 &gpio1 10 0 &gpio1 11 0 
+		&gpio1 16 0 &gpio1 20 0 &gpio1 21 0
+		&gpio1 24 0 &gpio1 25 0 &gpio1 26 0
+		&gpio1 27 0 &gpio1 28 0 &gpio1 29 0
+		&gpio1 30 0 &gpio2 0  0 &gpio2 1  0 
+		&gpio2 2  0 &gpio2 3  0 &gpio2 4  0
+  		&gpio2 5  0 &gpio2 6  0 &gpio2 7  0
+		&gpio2 23 0 &gpio2 25 0 &gpio3 22 0
+		&gpio3 23 0 &gpio3 24 0 &gpio3 29 0
+		&gpio3 31 0 &gpio4 10 0 &gpio4 11 0
+		&gpio4 12 0 &gpio4 20 0
+		&gpio5 2  0 &gpio5 18 0 &gpio5 19 0
+		&gpio5 20 0 &gpio5 21 0 &gpio5 30 0
+		&gpio5 31 0 &gpio6 0  0 &gpio6 1  0
+		&gpio6 7  0 &gpio6 8  0 &gpio6 9  0
+		&gpio6 11 0 &gpio6 14 0
+		&gpio6 15 0 &gpio6 16 0	&gpio6 31 0
+		&gpio7 12 0 &gpio7 13 0
+	>;
+};
+
+&gpc {
+        fsl,ldo-bypass = <0>; /* use ldo-bypass, u-boot will check it and configure */
+};
